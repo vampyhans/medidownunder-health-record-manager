@@ -55,17 +55,14 @@
   </div>
 </div>
 
-<script src="js/data.js"></script>
-<script>
-
-
-  // Step 1
-  if(DB.session()){
+<script src="js/data.js">
+</script>
+<script>  if(DB.session()){
     window.location.href = 'patients.html';
   }
 
   document.getElementById('loginForm').addEventListener('submit', function(e){
-    e.preventDefault(); 
+    e.preventDefault();
 
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
@@ -76,7 +73,7 @@
     if(!email || !pass){ formIsValid = false; }
 
     document.getElementById('loginError').classList.remove('show');
-    if(!formIsValid) return; 
+    if(!formIsValid) return;
 
     const matchedUser = DB.users().find(function(u){
       return u.email.toLowerCase() === email.toLowerCase() && u.password === pass;
