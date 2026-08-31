@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patients — MediDownUnder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js">
+</script>
+<script src="js/shell.js">
+</script>
+<script>  const s = requireAuth();
+
+  if(s){
+
+    const patients = DB.patients();
+    const notes = DB.notes();
+
+    const registerBtn = s.role === 'receptionist'
+      ? `<a class="btn btn-primary" href="patient-new.html">Register patient</a>`
+      : '';
+
+    const todayStr = new Date().toDateString();
+    const notesToday = notes.filter(n => new Date(n.createdAt).toDateString() === todayStr).length;
+
+    const statStripHtml = `
+      <div class="stat-strip">
+        <div class="stat-card">
+          <div class="stat-num">${patients.length}</div>
+          <div class="stat-label">Total patients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${notes.length}</div>
+          <div class="stat-label">Consultation notes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${notesToday}</div>
+          <div class="stat-label">Notes added today</div>
+        </div>
+      </div>`;
+
+    function rowsHtml(list){
+      return `<table class="list">
+        <thead><tr><th>ID</th><th>Name</th><th>Date of birth</th><th>Contact</th></tr></thead>
+        <tbody>
+          ${list.map(p => `
+            <tr class="clickable" onclick="window.location.href='patient-detail.html?id=${p.id}'">
+              <td class="mono pid">${p.id}</td><td>${esc(p.name)}</td><td>${esc(p.dob)}</td><td>${esc(p.contact)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+    }
+
+    function emptyHtml(msg, hint){
+      return `<div class="empty-state">
+        <div class="ic">&#128193;</div>
+        <p><strong>${msg}</strong></p>
+        <p class="hint">${hint}</p>
+      </div>`;
+    }
+
+    const listOrEmpty = patients.length
+      ? rowsHtml(patients)
+      : emptyHtml('No patients found', s.role === 'receptionist'
+          ? 'Register a new patient to get started.'
+          : 'Ask reception to register a patient before adding notes.');
+
+    renderShell(s, 'search', `
+      ${statStripHtml}
+      <div class="card">
+        <h2>Patients</h2>
+        <p class="desc">Search by name or date of birth.</p>
+        <div class="toolbar">
+          <input class="search-input" id="q" placeholder="Search patients…" oninput="filterPatients(this.value)">
+          ${registerBtn}
+        </div>
+        <div id="listWrap">${listOrEmpty}</div>
+      </div>`);
+
+    window.filterPatients = function(q){
+      const wrap = document.getElementById('listWrap');
+      q = q.trim().toLowerCase();
+      const filtered = !q ? patients : patients.filter(p =>
+        p.name.toLowerCase().includes(q) || p.dob.includes(q));
+      wrap.innerHTML = filtered.length
+        ? rowsHtml(filtered)
+        : emptyHtml('No patients found', 'Try a different name or date of birth.');
+    };
+  }
+</script>
+</body>
+</html>
