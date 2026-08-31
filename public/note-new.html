@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add consultation note — MediDownUnder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js">
+</script>
+<script src="js/shell.js">
+</script>
+<script>  const s = requireAuth('clinician');
+  if(s){
+    const patientId = qs('id');
+    const p = DB.patients().find(x=>x.id===patientId);
+
+    if(!p){
+      window.location.href = 'patients.html';
+    } else {
+      renderShell(s, 'search', `
+        <a class="back-link" href="patient-detail.html?id=${patientId}">&larr; Back to ${esc(p.name)}</a>
+        <div class="card">
+          <h2>Add consultation note</h2>
+          <p class="desc mono">${p.id} · ${esc(p.name)}</p>
+          <form id="noteForm" novalidate>
+            <div class="field" id="f_note">
+              <label>Consultation note</label>
+              <textarea id="noteText" rows="6" placeholder="Record the consultation details…"></textarea>
+              <div class="field-error">Enter the consultation note before saving.</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save note</button>
+          </form>
+        </div>`);
+
+      document.getElementById('noteForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const text = document.getElementById('noteText').value.trim();
+        document.getElementById('f_note').classList.toggle('has-error', !text);
+        if(!text) return;
+        const notes = DB.notes();
+        notes.push({id:'N'+Date.now(), patientId, clinicianName:s.name, text, createdAt:new Date().toISOString()});
+        DB.saveNotes(notes);
+        DB.log(s.name, 'Added consultation note', patientId);
+        window.location.href = 'patient-detail.html?id=' + patientId;
+      });
+    }
+  }
+</script>
+</body>
+</html>

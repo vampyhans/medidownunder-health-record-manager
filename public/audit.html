@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit log — MediDownUnder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.js">
+</script>
+<script src="js/shell.js">
+</script>
+<script>  const s = requireAuth();
+  if(s){
+    const entries = DB.audit();
+    const rows = entries.length ? `
+      <table class="list">
+        <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Record</th></tr></thead>
+        <tbody>
+          ${entries.map(e=>`
+            <tr>
+              <td class="mono">${fmtDate(e.at)}</td>
+              <td>${esc(e.userName)}</td>
+              <td>${esc(e.action)}</td>
+              <td class="mono pid">${esc(e.target)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>` : `
+      <div class="empty-state">
+        <div class="ic">&#128203;</div>
+        <p><strong>No activity logged yet</strong></p>
+        <p class="hint">Actions across the system will appear here as they happen.</p>
+      </div>`;
+
+    renderShell(s, 'audit', `
+      <div class="card">
+        <h2>Audit log</h2>
+        <p class="desc">A read-only record of who created, edited, or viewed patient data, and when.</p>
+        ${rows}
+      </div>`);
+  }
+</script>
+</body>
+</html>

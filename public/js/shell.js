@@ -1,24 +1,5 @@
-/* ====================================================================
-   shell.js — the shared "page frame" (nav rail + top bar) and the
-   role-based access guard.
-
-   Every page except login.html calls requireAuth() near the top of its
-   script, then renderShell() to draw the nav rail, top bar, and that
-   page's own content all in one go.
-   ==================================================================== */
-
-// The little 5-dot "Southern Cross" logo mark, reused everywhere.
 const MARK = `<div class="mark"><i></i><i></i><i></i><i></i><i></i></div>`;
 
-// Checks who's logged in and (optionally) which role is allowed here.
-//   requireAuth()               -> any logged-in user may see this page
-//   requireAuth('receptionist') -> only the receptionist role may
-//   requireAuth('clinician')    -> only the clinician role may
-//
-// Returns:
-//   the session object   -> okay, continue building the page
-//   null                 -> not logged in at all (already redirected)
-//   false                -> logged in, but wrong role (blocked message shown)
 function requireAuth(role){
   const s = DB.session();
 
@@ -35,21 +16,14 @@ function requireAuth(role){
   return s;
 }
 
-// Clears the session and sends the user back to the login page.
 function doLogout(){
   DB.clearSession();
   window.location.href = 'login.html';
 }
 
-// Builds the nav rail + top bar + page content, and puts it all into
-// the empty <div id="app"> that every page starts with.
-//   session     -> the logged-in user (from requireAuth)
-//   activeKey   -> which nav button should be highlighted ('search', 'register', 'audit')
-//   contentHtml -> the HTML for the middle of the page (built by each page itself)
 function renderShell(session, activeKey, contentHtml){
   const isReceptionist = session.role === 'receptionist';
 
-  // Receptionists see one extra nav button ("Register") that clinicians don't.
   const navItems = isReceptionist ? [
     {key:'search',   ic:'&#128269;', label:'Patients',  href:'patients.html'},
     {key:'register', ic:'&#128221;', label:'Register',  href:'patient-new.html'},
@@ -90,9 +64,6 @@ function renderShell(session, activeKey, contentHtml){
     </div>`;
 }
 
-// Shown instead of the normal page content when a logged-in user tries
-// to open a page that isn't meant for their role (e.g. a receptionist
-// opening the "add consultation note" page).
 function renderBlocked(session, neededRole){
   renderShell(session, '', `
     <div class="card empty-state">
