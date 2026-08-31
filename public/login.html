@@ -12,7 +12,6 @@
 <div id="app">
   <div class="login-screen">
 
-    <!-- Left hero panel: brand + short pitch (hidden on narrow screens) -->
     <div class="login-hero">
       <div class="constellation"><i></i><i></i><i></i><i></i><i></i></div>
       <div>
@@ -22,7 +21,6 @@
       <div class="hero-foot"><span class="dot"></span>Two roles, one workflow: Reception and Clinician</div>
     </div>
 
-    <!-- Right panel: the actual login form -->
     <div class="login-panel">
       <div class="login-card">
         <div class="login-brand">
@@ -59,15 +57,7 @@
 
 <script src="js/data.js"></script>
 <script>
-  /* ================================================================
-     LOGIN PAGE
-     Steps this script follows:
-     1. If someone is already logged in, skip straight to the app.
-     2. When the form is submitted: check both fields were filled in.
-     3. Look for a matching user in DB.users() (email + password).
-     4. If found -> save a session and go to the patients page.
-        If not found -> show the error banner and stay here.
-     ================================================================ */
+
 
   // Step 1
   if(DB.session()){
@@ -75,32 +65,28 @@
   }
 
   document.getElementById('loginForm').addEventListener('submit', function(e){
-    e.preventDefault(); // stop the browser from doing a normal page reload
+    e.preventDefault(); 
 
     const email = document.getElementById('email').value.trim();
     const pass = document.getElementById('password').value;
 
-    // Step 2: simple required-field validation
     let formIsValid = true;
     document.getElementById('fEmail').classList.toggle('has-error', !email);
     document.getElementById('fPass').classList.toggle('has-error', !pass);
     if(!email || !pass){ formIsValid = false; }
 
     document.getElementById('loginError').classList.remove('show');
-    if(!formIsValid) return; // stop here, the red field messages are enough
+    if(!formIsValid) return; 
 
-    // Step 3: check the email + password against our seeded user list
     const matchedUser = DB.users().find(function(u){
       return u.email.toLowerCase() === email.toLowerCase() && u.password === pass;
     });
 
-    // Step 4: no match -> show the error banner and stop
     if(!matchedUser){
       document.getElementById('loginError').classList.add('show');
       return;
     }
 
-    // Success: remember who's logged in, log it, then move to the app
     DB.setSession({ email: matchedUser.email, role: matchedUser.role, name: matchedUser.name });
     DB.log(matchedUser.name, 'Logged in', '—');
     window.location.href = 'patients.html';
