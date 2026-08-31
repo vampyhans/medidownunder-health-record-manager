@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — MediDownUnder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div class="login-screen">
+
+    <!-- Left hero panel: brand + short pitch (hidden on narrow screens) -->
+    <div class="login-hero">
+      <div class="constellation"><i></i><i></i><i></i><i></i><i></i></div>
+      <div>
+        <h2>Patient records, without the paperwork.</h2>
+        <p>MediDownUnder gives reception and clinical staff one shared, secure place to register patients and record consultations, built for small Australian general practices.</p>
+      </div>
+      <div class="hero-foot"><span class="dot"></span>Two roles, one workflow: Reception and Clinician</div>
+    </div>
+
+    <!-- Right panel: the actual login form -->
+    <div class="login-panel">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="mark"><i></i><i></i><i></i><i></i><i></i></div>
+          <div>
+            <div class="word">MediDownUnder</div>
+            <div class="tag">Patient record management for Australian GP clinics</div>
+          </div>
+        </div>
+        <div class="alert alert-error" id="loginError">Those details don't match an account. Check your email and password and try again.</div>
+        <form id="loginForm" novalidate>
+          <div class="field" id="fEmail">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="you@medidownunder.au">
+            <div class="field-error">Enter your email address.</div>
+          </div>
+          <div class="field" id="fPass">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+            <div class="field-error">Enter your password.</div>
+          </div>
+          <button type="submit" class="btn btn-primary">Log in</button>
+        </form>
+        <div class="demo-creds">
+          Demo accounts for this prototype
+          <span class="mono">Receptionist — alice@medidownunder.au / reception123</span>
+          <span class="mono">Clinician — ben@medidownunder.au / clinician123</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+  /* ================================================================
+     LOGIN PAGE
+     Steps this script follows:
+     1. If someone is already logged in, skip straight to the app.
+     2. When the form is submitted: check both fields were filled in.
+     3. Look for a matching user in DB.users() (email + password).
+     4. If found -> save a session and go to the patients page.
+        If not found -> show the error banner and stay here.
+     ================================================================ */
+
+  // Step 1
+  if(DB.session()){
+    window.location.href = 'patients.html';
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault(); // stop the browser from doing a normal page reload
+
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+
+    // Step 2: simple required-field validation
+    let formIsValid = true;
+    document.getElementById('fEmail').classList.toggle('has-error', !email);
+    document.getElementById('fPass').classList.toggle('has-error', !pass);
+    if(!email || !pass){ formIsValid = false; }
+
+    document.getElementById('loginError').classList.remove('show');
+    if(!formIsValid) return; // stop here, the red field messages are enough
+
+    // Step 3: check the email + password against our seeded user list
+    const matchedUser = DB.users().find(function(u){
+      return u.email.toLowerCase() === email.toLowerCase() && u.password === pass;
+    });
+
+    // Step 4: no match -> show the error banner and stop
+    if(!matchedUser){
+      document.getElementById('loginError').classList.add('show');
+      return;
+    }
+
+    // Success: remember who's logged in, log it, then move to the app
+    DB.setSession({ email: matchedUser.email, role: matchedUser.role, name: matchedUser.name });
+    DB.log(matchedUser.name, 'Logged in', '—');
+    window.location.href = 'patients.html';
+  });
+</script>
+</body>
+</html>
