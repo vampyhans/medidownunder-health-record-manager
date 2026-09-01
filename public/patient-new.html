@@ -1,24 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Register patient — MediDownUnder</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<div id="app"></div>
-<div class="toast" id="toast"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register patient — MediDownUnder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <div class="toast" id="toast"></div>
 
-<script src="js/data.js">
-</script>
-<script src="js/shell.js">
-</script>
-<script>  const s = requireAuth('receptionist');
-  if(s){
-    renderShell(s, 'register', `
+    <script src="js/data.js"></script>
+    <script src="js/shell.js"></script>
+    <script>
+      const s = requireAuth('receptionist')
+      if (s) {
+        renderShell(
+          s,
+          'register',
+          `
       <a class="back-link" href="patients.html">&larr; Back to patients</a>
       <div class="card">
         <h2>Register patient</h2>
@@ -36,48 +41,65 @@
           </div>
           <button type="submit" class="btn btn-primary" style="margin-top:6px;">Save patient</button>
         </form>
-      </div>`);
+      </div>`,
+        )
 
-    let pendingDuplicate = null;
+        let pendingDuplicate = null
 
-    document.getElementById('regForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      const name = document.getElementById('p_name').value.trim();
-      const dob = document.getElementById('p_dob').value;
-      const contact = document.getElementById('p_contact').value.trim();
-      const address = document.getElementById('p_address').value.trim();
+        document.getElementById('regForm').addEventListener('submit', (e) => {
+          e.preventDefault()
+          const name = document.getElementById('p_name').value.trim()
+          const dob = document.getElementById('p_dob').value
+          const contact = document.getElementById('p_contact').value.trim()
+          const address = document.getElementById('p_address').value.trim()
 
-      let valid = true;
-      const setErr = (id, cond) => { document.getElementById(id).classList.toggle('has-error', cond); if(cond) valid=false; };
-      setErr('f_name', !name);
-      setErr('f_dob', !dob);
-      setErr('f_contact', !(contact && /^[0-9+()\s-]{6,}$/.test(contact)));
-      setErr('f_address', !address);
-      if(!valid) return;
+          let valid = true
+          const setErr = (id, cond) => {
+            document.getElementById(id).classList.toggle('has-error', cond)
+            if (cond) valid = false
+          }
+          setErr('f_name', !name)
+          setErr('f_dob', !dob)
+          setErr(
+            'f_contact',
+            !(contact && /^(?=.*\d)[0-9+()\s-]{6,}$/.test(contact)),
+          )
+          setErr('f_address', !address)
+          if (!valid) return
 
-      const dupe = DB.patients().find(p => p.name.toLowerCase()===name.toLowerCase() && p.dob===dob);
-      if(dupe && !pendingDuplicate){
-        document.getElementById('dupWarning').classList.add('show');
-        pendingDuplicate = {name,dob,contact,address};
-        return;
+          const dupe = DB.patients().find(
+            (p) => p.name.toLowerCase() === name.toLowerCase() && p.dob === dob,
+          )
+          if (dupe && !pendingDuplicate) {
+            document.getElementById('dupWarning').classList.add('show')
+            pendingDuplicate = { name, dob, contact, address }
+            return
+          }
+          savePatient(name, dob, contact, address)
+        })
+
+        document.getElementById('dupProceed').addEventListener('click', () => {
+          const { name, dob, contact, address } = pendingDuplicate
+          savePatient(name, dob, contact, address)
+        })
+
+        function savePatient(name, dob, contact, address) {
+          const patients = DB.patients()
+          const id = 'P' + String(1000 + patients.length + 1)
+          patients.push({
+            id,
+            name,
+            dob,
+            contact,
+            address,
+            createdBy: s.name,
+            createdAt: new Date().toISOString(),
+          })
+          DB.savePatients(patients)
+          DB.log(s.name, 'Registered patient', id)
+          window.location.href = 'patient-detail.html?id=' + id
+        }
       }
-      savePatient(name,dob,contact,address);
-    });
-
-    document.getElementById('dupProceed').addEventListener('click', ()=>{
-      const {name,dob,contact,address} = pendingDuplicate;
-      savePatient(name,dob,contact,address);
-    });
-
-    function savePatient(name,dob,contact,address){
-      const patients = DB.patients();
-      const id = 'P' + String(1000 + patients.length + 1);
-      patients.push({id,name,dob,contact,address,createdBy:s.name,createdAt:new Date().toISOString()});
-      DB.savePatients(patients);
-      DB.log(s.name, 'Registered patient', id);
-      window.location.href = 'patient-detail.html?id=' + id;
-    }
-  }
-</script>
-</body>
+    </script>
+  </body>
 </html>

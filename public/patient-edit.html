@@ -1,31 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edit patient — MediDownUnder</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<div id="app"></div>
-<div class="toast" id="toast"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit patient — MediDownUnder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <div class="toast" id="toast"></div>
 
-<script src="js/data.js">
-</script>
-<script src="js/shell.js">
-</script>
-<script>  const s = requireAuth('receptionist');
-  if(s){
-    const id = qs('id');
-    const patients = DB.patients();
-    const p = patients.find(x=>x.id===id);
+    <script src="js/data.js"></script>
+    <script src="js/shell.js"></script>
+    <script>
+      const s = requireAuth('receptionist')
+      if (s) {
+        const id = qs('id')
+        const patients = DB.patients()
+        const p = patients.find((x) => x.id === id)
 
-    if(!p){
-      window.location.href = 'patients.html';
-    } else {
-      renderShell(s, 'search', `
+        if (!p) {
+          window.location.href = 'patients.html'
+        } else {
+          renderShell(
+            s,
+            'search',
+            `
         <a class="back-link" href="patient-detail.html?id=${id}">&larr; Back to record</a>
         <div class="card">
           <h2>Edit patient details</h2>
@@ -39,30 +44,48 @@
             </div>
             <button type="submit" class="btn btn-primary" style="margin-top:6px;">Save changes</button>
           </form>
-        </div>`);
+        </div>`,
+          )
 
-      document.getElementById('editForm').addEventListener('submit', e=>{
-        e.preventDefault();
-        const name = document.getElementById('p_name').value.trim();
-        const dob = document.getElementById('p_dob').value;
-        const contact = document.getElementById('p_contact').value.trim();
-        const address = document.getElementById('p_address').value.trim();
-        let valid = true;
-        const setErr = (fid, cond) => { document.getElementById(fid).classList.toggle('has-error', cond); if(cond) valid=false; };
-        setErr('f_name', !name); setErr('f_dob', !dob);
-        setErr('f_contact', !(contact && /^[0-9+()\s-]{6,}$/.test(contact)));
-        setErr('f_address', !address);
-        if(!valid) return;
+          document
+            .getElementById('editForm')
+            .addEventListener('submit', (e) => {
+              e.preventDefault()
+              const name = document.getElementById('p_name').value.trim()
+              const dob = document.getElementById('p_dob').value
+              const contact = document.getElementById('p_contact').value.trim()
+              const address = document.getElementById('p_address').value.trim()
+              let valid = true
+              const setErr = (fid, cond) => {
+                document.getElementById(fid).classList.toggle('has-error', cond)
+                if (cond) valid = false
+              }
+              setErr('f_name', !name)
+              setErr('f_dob', !dob)
+              setErr(
+                'f_contact',
+                !(contact && /^(?=.*\d)[0-9+()\s-]{6,}$/.test(contact)),
+              )
+              setErr('f_address', !address)
+              if (!valid) return
 
-        const all = DB.patients();
-        const idx = all.findIndex(x=>x.id===id);
-        all[idx] = {...all[idx], name,dob,contact,address, updatedBy:s.name, updatedAt:new Date().toISOString()};
-        DB.savePatients(all);
-        DB.log(s.name, 'Edited patient details', id);
-        window.location.href = 'patient-detail.html?id=' + id;
-      });
-    }
-  }
-</script>
-</body>
+              const all = DB.patients()
+              const idx = all.findIndex((x) => x.id === id)
+              all[idx] = {
+                ...all[idx],
+                name,
+                dob,
+                contact,
+                address,
+                updatedBy: s.name,
+                updatedAt: new Date().toISOString(),
+              }
+              DB.savePatients(all)
+              DB.log(s.name, 'Edited patient details', id)
+              window.location.href = 'patient-detail.html?id=' + id
+            })
+        }
+      }
+    </script>
+  </body>
 </html>
