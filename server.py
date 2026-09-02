@@ -4,7 +4,7 @@ import os
 import sys
 
 PUBLIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
-DEFAULT_PORT = 8000
+DEFAULT_PORT = 80
 
 class MediDownUnderHandler(http.server.SimpleHTTPRequestHandler):
 
